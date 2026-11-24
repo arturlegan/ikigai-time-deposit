@@ -69,6 +69,18 @@ class TimeDepositCalculatorTest {
         assertThat(balanceAfterUpdate(planType, BALANCE, 100)).isEqualTo(BALANCE);
     }
 
+    @Test
+    void missingPlanTypeWithinTheFirst30DaysLeavesBalanceUnchanged() {
+        assertThat(balanceAfterUpdate(null, BALANCE, 30)).isEqualTo(BALANCE);
+    }
+
+    @Test
+    void missingPlanTypeAfter30DaysLeavesBalanceUnchanged() {
+        // Intended deviation: the original implementation threw a NullPointerException here.
+        // A missing plan type is now treated like an unknown one (README: invalid input handling is not required).
+        assertThat(balanceAfterUpdate(null, BALANCE, 31)).isEqualTo(BALANCE);
+    }
+
     @Nested
     class Rounding {
 
