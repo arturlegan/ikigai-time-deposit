@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: time-deposit
+  # Datasource is supplied by the environment (SPRING_DATASOURCE_URL / _USERNAME / _PASSWORD)
+  # or, for local runs and tests, by Testcontainers via @ServiceConnection.
+  jpa:
+    open-in-view: false        # no lazy loading outside the persistence adapter
+    hibernate:
+      ddl-auto: validate       # schema is owned by Flyway migrations
