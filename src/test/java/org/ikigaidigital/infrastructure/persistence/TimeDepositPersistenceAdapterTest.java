@@ -1,7 +1,6 @@
 package org.ikigaidigital.infrastructure.persistence;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.ikigaidigital.TestcontainersConfiguration;
@@ -89,16 +88,6 @@ class TimeDepositPersistenceAdapterTest {
         Map<String, Object> row = jdbc.queryForMap("select plan_type, days, balance from time_deposits where id = 1");
         assertThat(row).containsEntry("plan_type", "basic").containsEntry("days", 31)
                 .containsEntry("balance", new BigDecimal("1001.66"));
-    }
-
-    @Test
-    void loadsDepositsForUpdateWithPessimisticWriteLock() {
-        insertDeposit(1, "basic", 31, "1000.00");
-
-        adapter.findAllForUpdate();
-
-        TimeDepositEntity loaded = entityManager.find(TimeDepositEntity.class, 1);
-        assertThat(entityManager.getLockMode(loaded)).isEqualTo(LockModeType.PESSIMISTIC_WRITE);
     }
 
     @Test

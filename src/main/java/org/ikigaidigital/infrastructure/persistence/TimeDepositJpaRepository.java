@@ -9,7 +9,8 @@ import java.util.List;
 
 interface TimeDepositJpaRepository extends JpaRepository<TimeDepositEntity, Integer> {
 
-    // SELECT ... FOR UPDATE; ordered by id so concurrent transactions lock rows in the same order (no deadlocks).
+    // Row lock (PostgreSQL emits SELECT ... FOR NO KEY UPDATE); ordered by id so concurrent transactions lock rows
+    // in the same order (no deadlocks).
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select d from TimeDepositEntity d order by d.id")
     List<TimeDepositEntity> findAllForUpdate();
