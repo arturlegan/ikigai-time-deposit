@@ -77,7 +77,8 @@ class TimeDepositCalculatorTest {
     @Test
     void missingPlanTypeAfter30DaysLeavesBalanceUnchanged() {
         // Intended deviation: the original implementation threw a NullPointerException here.
-        // A missing plan type is now treated like an unknown one (README: invalid input handling is not required).
+        // A missing plan type is now treated like an unknown one
+        // (the task description says invalid input handling is not required).
         assertThat(balanceAfterUpdate(null, BALANCE, 31)).isEqualTo(BALANCE);
     }
 

@@ -6,7 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** Applies one month of interest to all time deposits. */
+/**
+ * Applies one month of interest to all time deposits. {@code days} is not advanced: the existing calculator never
+ * changes it, so it is assumed to be maintained outside this service.
+ */
 public class UpdateAllBalances {
 
     private final TimeDepositRepository repository;
