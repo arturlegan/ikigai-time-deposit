@@ -17,10 +17,10 @@ public class UpdateAllBalances {
         this.calculator = calculator;
     }
 
-    // One transaction: balances are read and written atomically.
+    // One transaction: rows are locked on read, so concurrent updates cannot lose a month of interest.
     @Transactional
     public void execute() {
-        List<TimeDeposit> deposits = repository.findAll();
+        List<TimeDeposit> deposits = repository.findAllForUpdate();
         calculator.updateBalance(deposits);
         repository.updateBalances(deposits);
     }

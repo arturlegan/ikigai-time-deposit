@@ -7,7 +7,8 @@ import java.util.List;
 /** Outbound port for time deposit persistence; implemented by an infrastructure adapter. */
 public interface TimeDepositRepository {
 
-    List<TimeDeposit> findAll();
+    /** Loads all deposits and locks them until the surrounding transaction ends (requires a transaction). */
+    List<TimeDeposit> findAllForUpdate();
 
     List<TimeDepositWithWithdrawals> findAllWithWithdrawals();
 

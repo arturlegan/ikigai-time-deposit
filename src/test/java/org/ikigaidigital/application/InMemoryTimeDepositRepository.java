@@ -23,7 +23,7 @@ class InMemoryTimeDepositRepository implements TimeDepositRepository {
     }
 
     @Override
-    public List<TimeDeposit> findAll() {
+    public List<TimeDeposit> findAllForUpdate() {
         return deposits.values().stream().map(InMemoryTimeDepositRepository::copy).toList();
     }
 
