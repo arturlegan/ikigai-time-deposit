@@ -59,6 +59,7 @@ components:
           example: 45
         withdrawals:
           type: array
+          description: All withdrawals of this deposit. The requirements only name this field.
           items:
             $ref: '#/components/schemas/Withdrawal'
     Withdrawal:

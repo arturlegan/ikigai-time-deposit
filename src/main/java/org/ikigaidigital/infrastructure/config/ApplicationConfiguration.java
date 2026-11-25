@@ -8,8 +8,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Registers domain and application classes as beans, so they stay free of Spring stereotypes.
- * Being Spring beans also makes the use cases' @Transactional (and with it the row lock) effective.
+ * Registers domain and application classes as beans, so they need no Spring stereotypes (@Component/@Service);
+ * the domain has no Spring dependency at all, the use cases only declare @Transactional.
+ * Being Spring beans makes that @Transactional (and with it the row lock) effective.
  */
 @Configuration(proxyBeanMethods = false)
 class ApplicationConfiguration {

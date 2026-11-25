@@ -1,5 +1,6 @@
 package org.ikigaidigital.application;
 
+import org.ikigaidigital.TestDatabase;
 import org.ikigaidigital.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +42,9 @@ class UpdateAllBalancesConcurrencyTest {
 
     @Test
     void concurrentBalanceUpdatesAreSerialisedSoNoMonthOfInterestIsLost() throws Exception {
-        jdbc.update("delete from withdrawals");
-        jdbc.update("delete from time_deposits");
-        jdbc.update("insert into time_deposits (id, plan_type, days, balance) values (1, 'basic', 31, 1000.00)");
+        TestDatabase db = new TestDatabase(jdbc);
+        db.clear();
+        db.insertDeposit(1, "basic", 31, "1000.00");
         AtomicReference<CompletableFuture<Void>> secondUpdate = new AtomicReference<>();
 
         // The use case's @Transactional joins this outer transaction, so its row lock is held until the outer commit.

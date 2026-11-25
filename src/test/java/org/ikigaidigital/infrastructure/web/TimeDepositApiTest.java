@@ -1,5 +1,6 @@
 package org.ikigaidigital.infrastructure.web;
 
+import org.ikigaidigital.TestDatabase;
 import org.ikigaidigital.TestcontainersConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,20 +32,21 @@ class TimeDepositApiTest {
     private JdbcTemplate jdbc;
 
     private RestClient client;
+    private TestDatabase db;
 
     @BeforeEach
     void setUp() {
         client = RestClient.create("http://localhost:" + port);
-        jdbc.update("delete from withdrawals");
-        jdbc.update("delete from time_deposits");
+        db = new TestDatabase(jdbc);
+        db.clear();
     }
 
     @Test
     void listsAllDepositsWithTheirWithdrawalsInTheContractShape() throws Exception {
-        insertDeposit(1, "basic", 45, "1234567.00");
-        insertDeposit(2, "gold", 100, "750.00");
-        insertWithdrawal(10, 1, "1000.00", "2026-01-15");
-        insertWithdrawal(11, 1, "250.50", "2026-02-15");
+        db.insertDeposit(1, "basic", 45, "1234567.00");
+        db.insertDeposit(2, "gold", 100, "750.00");
+        db.insertWithdrawal(10, 1, "1000.00", "2026-01-15");
+        db.insertWithdrawal(11, 1, "250.50", "2026-02-15");
 
         String body = client.get().uri("/time-deposits").retrieve().body(String.class);
 
@@ -67,24 +69,14 @@ class TimeDepositApiTest {
 
     @Test
     void balanceUpdateAppliesOneMonthOfInterestToEveryDepositAndReturnsNoContent() {
-        insertDeposit(1, "basic", 45, "1234567.00");
-        insertDeposit(2, "student", 366, "5000.00");
-        insertDeposit(3, "gold", 100, "750.00");
+        db.insertDeposit(1, "basic", 45, "1234567.00");
+        db.insertDeposit(2, "student", 366, "5000.00");
+        db.insertDeposit(3, "gold", 100, "750.00");
 
         ResponseEntity<Void> response = client.post().uri("/time-deposits/balance-updates").retrieve().toBodilessEntity();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         assertThat(jdbc.queryForList("select balance from time_deposits order by id", BigDecimal.class))
                 .containsExactly(new BigDecimal("1235595.81"), new BigDecimal("5000.00"), new BigDecimal("750.00"));
-    }
-
-    private void insertDeposit(int id, String planType, int days, String balance) {
-        jdbc.update("insert into time_deposits (id, plan_type, days, balance) values (?, ?, ?, ?)",
-                id, planType, days, new BigDecimal(balance));
-    }
-
-    private void insertWithdrawal(int id, int timeDepositId, String amount, String date) {
-        jdbc.update("insert into withdrawals (id, time_deposit_id, amount, date) values (?, ?, ?, ?::date)",
-                id, timeDepositId, new BigDecimal(amount), date);
     }
 }

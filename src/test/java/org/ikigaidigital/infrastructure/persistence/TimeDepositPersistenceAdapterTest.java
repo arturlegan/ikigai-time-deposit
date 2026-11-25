@@ -3,10 +3,12 @@ package org.ikigaidigital.infrastructure.persistence;
 import jakarta.persistence.EntityManager;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
+import org.ikigaidigital.TestDatabase;
 import org.ikigaidigital.TestcontainersConfiguration;
 import org.ikigaidigital.TimeDeposit;
 import org.ikigaidigital.Withdrawal;
 import org.ikigaidigital.application.TimeDepositWithWithdrawals;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -42,12 +44,21 @@ class TimeDepositPersistenceAdapterTest {
     @Autowired
     private EntityManager entityManager;
 
+    private TestDatabase db;
+
+    @BeforeEach
+    void setUp() {
+        db = new TestDatabase(jdbc);
+    }
+
+    // Checks the port's unrounded domain values (incl. a fractional balance); the API test sees them only through the
+    // web mapper, which rounds to 2 decimals, and uses whole-number balances.
     @Test
     void loadsEveryDepositWithItsOwnWithdrawals() {
-        insertDeposit(1, "basic", 31, "1000.00");
-        insertDeposit(2, "student", 400, "250.50");
-        insertWithdrawal(10, 1, "100.00", "2026-01-15");
-        insertWithdrawal(11, 1, "50.25", "2026-02-15");
+        db.insertDeposit(1, "basic", 31, "1000.00");
+        db.insertDeposit(2, "student", 400, "250.50");
+        db.insertWithdrawal(10, 1, "100.00", "2026-01-15");
+        db.insertWithdrawal(11, 1, "50.25", "2026-02-15");
 
         List<TimeDepositWithWithdrawals> result = adapter.findAllWithWithdrawals();
 
@@ -61,11 +72,13 @@ class TimeDepositPersistenceAdapterTest {
         assertThat(result.get(1).withdrawals()).isEmpty();
     }
 
+    // Deliberately checks the query count: avoiding N+1 loading (one query per deposit) is a design property of this
+    // adapter, and the number of statements is its only observable evidence.
     @Test
     void loadsDepositsWithWithdrawalsInTwoQueriesRegardlessOfDepositCount() {
         for (int id = 1; id <= 5; id++) {
-            insertDeposit(id, "basic", 31, "1000.00");
-            insertWithdrawal(100 + id, id, "10.00", "2026-01-15");
+            db.insertDeposit(id, "basic", 31, "1000.00");
+            db.insertWithdrawal(100 + id, id, "10.00", "2026-01-15");
         }
         Statistics statistics = entityManager.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
@@ -77,7 +90,7 @@ class TimeDepositPersistenceAdapterTest {
 
     @Test
     void persistsUpdatedBalanceRoundedToCentsAndLeavesOtherColumnsUnchanged() {
-        insertDeposit(1, "basic", 31, "1000.83");
+        db.insertDeposit(1, "basic", 31, "1000.83");
         List<TimeDeposit> deposits = adapter.findAllForUpdate();
         assertThat(deposits).singleElement().extracting(TimeDeposit::getBalance).isEqualTo(1000.83);
 
@@ -95,15 +108,5 @@ class TimeDepositPersistenceAdapterTest {
     void refusesToRunOutsideATransaction() {
         assertThatThrownBy(() -> adapter.updateBalances(List.of()))
                 .isInstanceOf(IllegalTransactionStateException.class);
-    }
-
-    private void insertDeposit(int id, String planType, int days, String balance) {
-        jdbc.update("insert into time_deposits (id, plan_type, days, balance) values (?, ?, ?, ?)",
-                id, planType, days, new BigDecimal(balance));
-    }
-
-    private void insertWithdrawal(int id, int timeDepositId, String amount, String date) {
-        jdbc.update("insert into withdrawals (id, time_deposit_id, amount, date) values (?, ?, ?, ?)",
-                id, timeDepositId, new BigDecimal(amount), LocalDate.parse(date));
     }
 }
