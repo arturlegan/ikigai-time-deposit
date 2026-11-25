@@ -1,0 +1,79 @@
+openapi: 3.0.3
+info:
+  title: XA Bank Time Deposit API
+  version: 1.0.0
+  description: Time deposits with monthly interest. This contract is the source of truth; the server implements the generated interface.
+tags:
+  - name: TimeDeposits
+paths:
+  /time-deposits:
+    get:
+      tags: [TimeDeposits]
+      operationId: getAllTimeDeposits
+      summary: List all time deposits with their withdrawals
+      description: Ordered by deposit id; withdrawals ordered by withdrawal id. Returns an empty array if there are none.
+      responses:
+        '200':
+          description: All time deposits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeDeposit'
+  /time-deposits/balance-updates:
+    post:
+      tags: [TimeDeposits]
+      operationId: updateAllBalances
+      summary: Apply one month of interest to all time deposits
+      description: >-
+        Not idempotent: every call applies another month of interest (hence POST, not PUT).
+        Deposits with an unknown plan type are left unchanged.
+      responses:
+        '204':
+          description: Balances updated
+components:
+  schemas:
+    TimeDeposit:
+      type: object
+      required: [id, planType, balance, days, withdrawals]
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 1
+        planType:
+          type: string
+          description: >-
+            Known values with interest rules - basic, student, premium. Kept as a free string (not an enum)
+            because stored deposits may carry other plan types, which earn no interest but are still returned.
+          example: basic
+        balance:
+          type: number
+          description: Current balance, two decimal places.
+          example: 1234567.00
+        days:
+          type: integer
+          format: int32
+          description: Age of the deposit in days; drives interest eligibility (e.g. none in the first 30 days).
+          example: 45
+        withdrawals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Withdrawal'
+    Withdrawal:
+      type: object
+      required: [id, amount, date]
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 10
+        amount:
+          type: number
+          description: Withdrawn amount, two decimal places.
+          example: 100.00
+        date:
+          type: string
+          format: date
+          example: '2026-01-15'

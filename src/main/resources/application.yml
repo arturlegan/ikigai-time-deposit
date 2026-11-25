@@ -7,3 +7,12 @@ spring:
     open-in-view: false        # no lazy loading outside the persistence adapter
     hibernate:
       ddl-auto: validate       # schema is owned by Flyway migrations
+
+# Contract-first: Swagger UI shows the hand-written contract (static/openapi.yaml).
+# springdoc's api-docs must stay enabled (Swagger UI loads its config from /v3/api-docs/swagger-config),
+# but it must not derive a second, diverging contract from the code - so no controller path is scanned
+# (/v3/api-docs remains as an empty stub).
+springdoc:
+  paths-to-exclude: /**
+  swagger-ui:
+    url: /openapi.yaml

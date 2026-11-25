@@ -19,6 +19,7 @@
         <!-- Kept at 17: TimeDeposit is shared, consumers may still run on Java 17 -->
         <java.version>17</java.version>
         <springdoc.version>3.2.1</springdoc.version>
+        <openapi-generator.version>7.27.0</openapi-generator.version>
     </properties>
 
     <dependencies>
@@ -77,6 +78,39 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Contract-first: generates the API interface + DTOs from the OpenAPI contract on every build -->
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/static/openapi.yaml</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <apiPackage>org.ikigaidigital.infrastructure.web.api</apiPackage>
+                            <modelPackage>org.ikigaidigital.infrastructure.web.model</modelPackage>
+                            <modelNameSuffix>Dto</modelNameSuffix>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+                            <configOptions>
+                                <useSpringBoot4>true</useSpringBoot4>
+                                <interfaceOnly>true</interfaceOnly>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                                <openApiNullable>false</openApiNullable>
+                                <useBeanValidation>false</useBeanValidation>
+                                <documentationProvider>none</documentationProvider>
+                                <annotationLibrary>none</annotationLibrary>
+                                <generateJsonIncludeAnnotations>false</generateJsonIncludeAnnotations>
+                                <generateJsonSetterNullsAnnotations>false</generateJsonSetterNullsAnnotations>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
